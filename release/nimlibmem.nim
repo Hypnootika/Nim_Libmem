@@ -1,5 +1,5 @@
 const
-  libname = "bindings/Nim/src/libmem.dll"
+  libname = "src/libmem.dll"
 
 
 const
@@ -21,7 +21,7 @@ const
 type
   Apiimport* = distinct object
 type
-  boolt* = int32             
+  boolt* = bool
   bytet* = uint8             
   addresst* = uint64         
   sizet* = uint64            

@@ -1,4 +1,4 @@
-import futhark, os, strutils, winim
+import futhark, os, strutils, winim, osproc
 
 
 proc renameCb(n, k: string, p = ""): string =
@@ -6,11 +6,19 @@ proc renameCb(n, k: string, p = ""): string =
 
 
 importc:
-  outputPath currentSourcePath.parentDir / "generated.nim"
+  outputPath currentSourcePath.parentDir / "../release/generated.nim"
   path "Libmem"
   renameCallback renameCb
   "libmem.h"
 
+
+proc runPythonScript(script: string): string =
+  result = execProcess("python " & script)
+
+
+
+sleep(1000)
+echo runPythonScript("release/clean_generated_file.py")
 
 # var p: processt
 # var status = Getprocess(p.addr)

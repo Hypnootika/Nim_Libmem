@@ -1,134 +1,204 @@
 ## This is a test for the functions imported from Libmem.h
-import ../release/nimlibmem
-import strutils
-import winim/winstr
+import ../release/nimlibmem, strutils, winim/winstr
 
-const test_process = "notepad.exe"
+const
+  testProcess = "notepad.exe"
 
-## Getprocess tests
-var p: processt
-var status: boolt = Getprocess(p.addr)
-echo status
-echo "Process ID: ", p.pid, "\nProcess Name: ", nullTerminated($$p.name), "\nProcess bits: ", p.bits, "\nProcess Start Time: ", p.starttime, "\nProcess Path: ", nullTerminated($$p.path)
+var notepad_check: bool = false
 
-## Findprocess tests
-var p2: processt
-var status2: boolt = Findprocess(test_process, p2.addr)
-echo status2
-echo "Process ID: ", p2.pid, "\nProcess Name: ", nullTerminated($$p2.name), "\nProcess bits: ", p2.bits, "\nProcess Start Time: ", p2.starttime, "\nProcess Path: ", nullTerminated($$p2.path)
-
-## Getprocessex tests
-var p3: processt
-var status3: boolt = Getprocessex(p2.pid, p3.addr)
-echo status3
-echo "Process ID: ", p3.pid, "\nProcess Name: ", nullTerminated($$p3.name), "\nProcess bits: ", p3.bits, "\nProcess Start Time: ", p3.starttime, "\nProcess Path: ", nullTerminated($$p3.path)
-
-## Isprocessalive tests (should return 1)
-echo Isprocessalive(p3.addr)
-assert Isprocessalive(p3.addr) == 1
-
-## Getprocessbits tests (should return 64(for me, at least))
-echo Getsystembits()
-assert Getsystembits() == 64
-
-## Getthread tests
-var t: threadt
-var status4: boolt = Getthread(t.addr)
-echo status4
-echo "Thread ID: ", t.tid, "\nThread Owner Process ID: ", t.ownerpid
-
-## Getthreadex tests
-var t2: threadt
-var status5: boolt = Getthreadex(p2.addr, t2.addr)
-echo status5
-echo "Thread ID: ", t2.tid, "\nThread Owner Process ID: ", t2.ownerpid
-
-## Getthreadprocess tests
-var pt: processt
-var status6: boolt = Getthreadprocess(t2.addr, pt.addr)
-echo status6
-echo "Process ID: ", pt.pid, "\nProcess Name: ", nullTerminated($$pt.name), "\nProcess bits: ", pt.bits, "\nProcess Start Time: ", pt.starttime, "\nProcess Path: ", nullTerminated($$pt.path)
-
-## Enumprocesses tests
 var
+  p2: processt
   processList: seq[processt]
   pprocess: processt
-
-proc enumProcessCallback(pproc: ptr processt, arg: pointer): boolt {.cdecl.} =
-  processList.add(pproc[])
-  result = 1
-
-var status7: boolt = Enumprocesses(enumProcessCallback, nil)
-echo status7
-echo processList.len
-for p in processList:
-  echo "Process ID: ", p.pid, "\nProcess Name: ", nullTerminated($$p.name), "\nProcess bits: ", p.bits, "\nProcess Start Time: ", p.starttime, "\nProcess Path: ", nullTerminated($$p.path)
-
-
-## Enumthreads tests
-var
   threadList: seq[threadt]
   pthread: threadt
-
-proc enumThreadCallback(pthread: ptr threadt, arg: pointer): boolt {.cdecl.} =
-  threadList.add(pthread[])
-  result = 1
-
-var status8: boolt = Enumthreads(enumThreadCallback, nil)
-echo status8
-echo threadList.len
-for t in threadList:
-  echo "Thread ID: ", t.tid, "\nThread Owner Process ID: ", t.ownerpid
-
-## Enumthreadsex tests
-var
   threadList2: seq[threadt]
   pthread2: threadt
-
-proc enumThreadCallback2(pthread2: ptr threadt, arg: pointer): boolt {.cdecl.} =
-  threadList2.add(pthread2[])
-  result = 1
-
-var status9: boolt = Enumthreadsex(pprocess.addr, enumThreadCallback2, nil)
-echo status9
-echo threadList2.len
-
-
-## Findmodule tests currently not working for me
-var
   moduleList: seq[modulet]
   pmodule: modulet
 
+
+proc enumProcessCallback(pproc: ptr processt, arg: pointer): boolt {.cdecl.} =
+  processList.add(pproc[])
+  result = true
+
+proc enumThreadCallback(pthread: ptr threadt, arg: pointer): boolt {.cdecl.} =
+  threadList.add(pthread[])
+  result = true
+
+proc enumThreadCallback2(pthread2: ptr threadt, arg: pointer): boolt {.cdecl.} =
+  threadList2.add(pthread2[])
+  result = true
+
 proc enumModuleCallback(pmodule: ptr modulet, arg: pointer): boolt {.cdecl.} =
   moduleList.add(pmodule[])
-  result = 1
+  result = true
 
-var status10: boolt = Enummodules(enumModuleCallback, nil)
-echo status10
-echo moduleList.len
-for m in moduleList:
-  echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path)
+proc printProcessInfo(prefix: string, p: processt) =
+  echo prefix, "Process ID: ", p.pid,
+      "\n", prefix, "Process Name: ", nullTerminated($$p.name),
+      "\n", prefix, "Process bits: ", p.bits,
+      "\n", prefix, "Process Start Time: ", p.starttime,
+      "\n", prefix, "Process Path: ", nullTerminated($$p.path)
 
-const test_module = "ntdll.dll"
-var m: modulet
-var status11: boolt = Findmodule(test_module, m.addr)
-echo status11
-echo "Module Name: ", nullTerminated($$m.name), "\nModule Path: ", nullTerminated($$m.path), "\nModule Base: ", m.base, "\nModule Size: ", m.size
+proc printModuleInfo(prefix: string, m: modulet) =
+  echo prefix, "Module Name: ", nullTerminated($$m.name),
+      "\n", prefix, "Module Path: ", nullTerminated($$m.path),
+      "\n", prefix, "Module Base: ", m.base,
+      "\n", prefix, "Module Size: ", m.size
 
-var m2: modulet
-var status12: boolt = Findmoduleex(p2.addr, test_module, m2.addr)
-echo status12
-echo "Module Name: ", nullTerminated($$m2.name), "\nModule Path: ", nullTerminated($$m2.path), "\nModule Base: ", m2.base, "\nModule Size: ", m2.size
+proc printThreadInfo(prefix: string, t: threadt) =
+  echo prefix, "Thread ID: ", t.tid,
+      "\n", prefix, "Thread Owner Process ID: ", t.ownerpid
 
+proc testGetProcess() =
+  var p: processt
+  let status = Getprocess(p.addr)
+  assert status, "Getprocess failed."
+  printProcessInfo("Getprocess: ", p)
 
-## Loading in the local process seems to work, but unloading does not
-## The Ex versions of the functions cant even get imported
-const loadtests = r"C:\Windows\System32\FXSEVENT.dll"
-const unloadtest = r"C:\Windows\System32\oleaccrc.dll"
-var mt: modulet
-var status13: boolt = Loadmodule(loadtests, mt.addr)
-echo status13
-echo Findmodule("FXSEVENT.dll", mt.addr)
-echo mt.base
-status13 = Unloadmodule(mt.addr)
-echo status13
+testGetProcess()
+
+proc testFindProcess() =
+  var p: processt
+  let status = Findprocess(testProcess, p.addr)
+  assert status, "Findprocess failed."
+  printProcessInfo("Findprocess: ", p)
+
+testFindProcess()
+
+proc testGetProcessEx() =
+  var p: processt
+  let status = Getprocess(p.addr)
+  let status2 = Getprocessex(p.pid, p.addr)
+  assert status2, "Getprocessex failed."
+  assert status, "Getprocess failed."
+  printProcessInfo("Getprocessex: ", p)
+
+testGetProcessEx()
+
+proc isProcessAlive() =
+  var p: processt
+  let status = Getprocess(p.addr)
+  assert status, "Getprocess failed."
+  let alive = Isprocessalive(p.addr)
+  echo "Isprocessalive: ", alive
+  assert alive, "Isprocessalive failed."
+
+isProcessAlive()
+
+proc testGetProcessBits() =
+  let bits = Getsystembits()
+  echo "Getsystembits: ", bits
+  assert bits == 64, "Getprocessbits failed."
+
+testGetProcessBits()
+
+proc testGetThread() =
+  var t: threadt
+  let status = Getthread(t.addr)
+  assert status, "Getthread failed."
+  printThreadInfo("Getthread: ", t)
+
+testGetThread()
+
+proc testGetThreadEx() =
+  var p: processt
+  var t: threadt
+  let status = Getprocess(p.addr)
+  let status2 = Getthreadex(p.addr, t.addr)
+  assert status2, "Getthreadex failed."
+  assert status, "Getthread failed."
+  printThreadInfo("Getthreadex: ", t)
+
+testGetThreadEx()
+
+proc testGetThreadProcess() =
+  var t: threadt
+  let status = Getthread(t.addr)
+  let status2 = Getthreadprocess(t.addr, p2.addr)
+  assert status2, "Getthreadprocess failed."
+  assert status, "Getthread failed."
+  printProcessInfo("Getthreadprocess: ", p2)
+
+testGetThreadProcess()
+
+proc EnumprocessesTest() =
+  var status: boolt = Enumprocesses(enumProcessCallback, nil)
+  assert status, "Enumprocesses failed."
+  assert processList.len > 0, "Enumprocesses failed."
+  for p in processList:
+    printProcessInfo("Enumprocesses: ", p)
+
+EnumprocessesTest()
+
+proc EnumthreadsTest() =
+  var status: boolt = Enumthreads(enumThreadCallback, nil)
+  assert status, "Enumthreads failed."
+  assert threadList.len > 0, "Enumthreads failed."
+  for t in threadList:
+    printThreadInfo("Enumthreads: ", t)
+
+EnumthreadsTest()
+
+proc EnumThreadsExTest() =
+  var p: processt = processList[0]
+  var status: boolt = Enumthreadsex(p.addr, enumThreadCallback2, nil)
+  assert status, "Enumthreadsex failed."
+  assert threadList2.len > 0, "Enumthreadsex failed."
+  for t in threadList2:
+    printThreadInfo("Enumthreadsex: ", t)
+
+EnumThreadsExTest()
+
+proc EnumModulesTest() =
+  var status: boolt = Enummodules(enumModuleCallback, nil)
+  assert status, "Enummodules failed."
+  assert moduleList.len > 0, "Enummodules failed."
+  for m in moduleList:
+    printModuleInfo("Enummodules: ", m)
+
+EnumModulesTest()
+
+proc testFindModule() =
+  const test_module = "ntdll.dll"
+  var m: modulet
+  let status = Findmodule(test_module, m.addr)
+  assert status, "Findmodule failed."
+  printModuleInfo("Findmodule: ", m)
+
+testFindModule()
+
+proc testFindModuleEx() =
+  const test_module = "ntdll.dll"
+  var p: processt
+  var m: modulet
+  let status = Findmodule(test_module, m.addr)
+  assert status, "Findmodule failed."
+  printModuleInfo("Findmodule: ", m)
+  let status2 = Findmoduleex(p.addr, test_module, m.addr)
+  assert status2, "Findmoduleex failed."
+  printModuleInfo("Findmoduleex: ", m)
+
+testFindModuleEx()
+
+proc testLoadModule() =
+  const test_module = "ntdll.dll"
+  var m: modulet
+  let status = Loadmodule(test_module, m.addr)
+  assert status, "Loadmodule failed."
+  printModuleInfo("Loadmodule: ", m)
+
+testLoadModule()
+
+proc testUnloadModule() =
+  const test_module = "ntdll.dll"
+  var m: modulet
+  let status = Loadmodule(test_module, m.addr)
+  assert status, "Loadmodule failed."
+  printModuleInfo("Loadmodule: ", m)
+  let status2 = Unloadmodule(m.addr)
+  assert status2, "Unloadmodule failed."
+
+testUnloadModule()
+
