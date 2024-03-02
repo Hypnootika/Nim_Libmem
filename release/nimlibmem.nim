@@ -1,6 +1,8 @@
-const
-  libname = "src/libmem.dll"
-
+import memlib
+const libpath = "..\\release\\libmem.dll"
+const dll = staticReadDll(libpath)
+let lib = checkedLoadLib(dll)
+buildPragma {cdecl, memlib: lib}: libmem
 
 const
   Protnone* = cint(0)
@@ -19,13 +21,16 @@ const
 const
   Protxrw* = cint(7)
 type
+  enumboolt* {.size: sizeof(cint).} = enum
+    False = 0, True = 1
+type
   Apiimport* = distinct object
 type
-  boolt* = bool
+  boolt* = enumboolt         
   bytet* = uint8             
   addresst* = uint64         
   sizet* = uint64            
-  chart* = char
+  chart* = cchar            
   stringt* = cstring         
   pidt* = uint32             
   tidt* = uint32             
@@ -87,16 +92,6 @@ type
   vmtt* = structvmtt         
 when 0 is static:
   const
-    False* = 0               
-else:
-  let False* = 0             
-when 1 is static:
-  const
-    True* = 1                
-else:
-  let True* = 1              
-when 0 is static:
-  const
     Null* = 0                
 else:
   let Null* = 0              
@@ -110,22 +105,28 @@ when 16 is static:
     Instmax* = 16            
 else:
   let Instmax* = 16          
-proc Enumprocesses*(callback: proc (a0: ptr processt; a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumProcesses".}
-proc Getprocess*(processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetProcess".}
-proc Getprocessex*(pid: pidt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetProcessEx".}
-proc Findprocess*(processname: stringt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_FindProcess".}
-proc Isprocessalive*(process: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_IsProcessAlive".}
-proc Getsystembits*(): sizet {.dynlib: libname, cdecl, importc: "LM_GetSystemBits".}
-proc Enumthreads*(callback: proc (a0: ptr threadt; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumThreads".}
-proc Enumthreadsex*(process: ptr processt; callback: proc (a0: ptr threadt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumThreadsEx".}
-proc Getthread*(threadout: ptr threadt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThread".}
-proc Getthreadex*(process: ptr processt; threadout: ptr threadt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThreadEx".}
-proc Getthreadprocess*(thread: ptr threadt; processout: ptr processt): boolt {.dynlib: libname, cdecl, importc: "LM_GetThreadProcess".}
-proc Enummodules*(callback: proc (a0: ptr modulet; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModules".}
-proc Enummodulesex*(process: ptr processt; callback: proc (a0: ptr modulet;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.dynlib: libname, cdecl, importc: "LM_EnumModulesEx".}
-proc Findmodule*(name: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_FindModule".}
-proc Findmoduleex*(process: ptr processt; name: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_FindModuleEx".}
-proc Loadmodule*(path: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_LoadModule".}
-proc Loadmoduleex*(process: ptr processt; path: stringt; moduleout: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_LoadModuleEx".}
-proc Unloadmodule*(module: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_UnloadModule".}
-proc Unloadmoduleex*(process: ptr processt; module: ptr modulet): boolt {.dynlib: libname, cdecl, importc: "LM_UnloadModuleEx".}
+proc Enumprocesses*(callback: proc (a0: ptr processt; a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumProcesses".}
+proc Getprocess*(processout: ptr processt): boolt {.libmem, importc: "LM_GetProcess".}
+proc Getprocessex*(pid: pidt; processout: ptr processt): boolt {.libmem, importc: "LM_GetProcessEx".}
+proc Findprocess*(processname: stringt; processout: ptr processt): boolt {.libmem, importc: "LM_FindProcess".}
+proc Isprocessalive*(process: ptr processt): boolt {.libmem, importc: "LM_IsProcessAlive".}
+proc Getsystembits*(): sizet {.libmem, importc: "LM_GetSystemBits".}
+proc Enumthreads*(callback: proc (a0: ptr threadt; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.libmem, importc: "LM_EnumThreads".}
+proc Enumthreadsex*(process: ptr processt; callback: proc (a0: ptr threadt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumThreadsEx".}
+proc Getthread*(threadout: ptr threadt): boolt {.libmem, importc: "LM_GetThread".}
+proc Getthreadex*(process: ptr processt; threadout: ptr threadt): boolt {.libmem, importc: "LM_GetThreadEx".}
+proc Getthreadprocess*(thread: ptr threadt; processout: ptr processt): boolt {.libmem, importc: "LM_GetThreadProcess".}
+proc Enummodules*(callback: proc (a0: ptr modulet; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.libmem, importc: "LM_EnumModules".}
+proc Enummodulesex*(process: ptr processt; callback: proc (a0: ptr modulet;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumModulesEx".}
+proc Findmodule*(name: stringt; moduleout: ptr modulet): boolt {.libmem, importc: "LM_FindModule".}
+proc Findmoduleex*(process: ptr processt; name: stringt; moduleout: ptr modulet): boolt {.libmem, importc: "LM_FindModuleEx".}
+proc Loadmodule*(path: stringt; moduleout: ptr modulet): boolt {.libmem, importc: "LM_LoadModule".}
+proc Loadmoduleex*(process: ptr processt; path: stringt; moduleout: ptr modulet): boolt {.libmem, importc: "LM_LoadModuleEx".}
+proc Unloadmodule*(module: ptr modulet): boolt {.libmem, importc: "LM_UnloadModule".}
+proc Unloadmoduleex*(process: ptr processt; module: ptr modulet): boolt {.libmem, importc: "LM_UnloadModuleEx".}
+proc Enumsymbols*(module: ptr modulet; callback: proc (a0: ptr symbolt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumSymbols".}
+proc Findsymboladdress*(module: ptr modulet; name: stringt): addresst {.libmem, importc: "LM_FindSymbolAddress".}
+proc Demanglesymbol*(symbolname: stringt; demangledbuf: cstring; maxsize: sizet): stringt {.libmem, importc: "LM_DemangleSymbol".}
+proc Freedemanglesymbol*(symbolname: cstring): void {.libmem, importc: "LM_FreeDemangleSymbol".}
+proc Enumsymbolsdemangled*(module: ptr modulet; callback: proc (a0: ptr symbolt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumSymbolsDemangled".}
+proc Findsymboladdressdemangled*(module: ptr modulet; name: stringt): addresst {.libmem, importc: "LM_FindSymbolAddressDemangled".}

@@ -6,7 +6,7 @@ proc renameCb(n, k: string, p = ""): string =
 
 
 importc:
-  outputPath currentSourcePath.parentDir / "../release/generated.nim"
+  outputPath currentSourcePath.parentDir / "../release/nimlibmem.nim"
   path "Libmem"
   renameCallback renameCb
   "libmem.h"
@@ -20,7 +20,3 @@ proc runPythonScript(script: string): string =
 sleep(1000)
 echo runPythonScript("release/clean_generated_file.py")
 
-# var p: processt
-# var status = Getprocess(p.addr)
-# echo status
-# echo "Process ID: ", p.pid, " Process Name: ", p.name

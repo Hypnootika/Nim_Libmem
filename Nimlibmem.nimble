@@ -10,6 +10,12 @@ skipDirs      = @["tests", "examples", "docs"]
 
 requires "nim >= 2.0.0, winim, futhark, memlib"
 
-task build, "Build the project":
+task generate_wrapper, "Build the project":
   withDir "src":
-   exec "nim c -d:danger --opt:size --nomain --app:lib --cpu:amd64 src/nimlibmem.nim"
+   exec "nim c -c -d:danger --opt:size --nomain --cpu:amd64 nimlibmem.nim"
+   exec "python ../release/clean_generated_file.py"
+
+task runtests, "Run the tests":
+  withDir "tests":
+    exec "nim c -r test_nimlibmem.nim"
+    exec "cmd /k DEL test_nimlibmem.exe"

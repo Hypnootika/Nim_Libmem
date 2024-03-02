@@ -2,7 +2,7 @@ import re
 import os
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-gen_file = os.path.join(current_dir, "generated.nim")
+gen_file = os.path.join(current_dir, "nimlibmem.nim")
 
 
 def process_file():
@@ -20,7 +20,8 @@ def process_file():
         data = re.sub(pattern, subst, data)
     data = data.replace("cschar", "cchar")
     libname_snippet = """import memlib
-const dll = staticReadDll("libmem.dll")
+const libpath = "..\\\\release\\\\libmem.dll"
+const dll = staticReadDll(libpath)
 let lib = checkedLoadLib(dll)
 buildPragma {cdecl, memlib: lib}: libmem"""
     data = libname_snippet + "\n" + data
