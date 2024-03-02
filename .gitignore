@@ -3,3 +3,5 @@ nimblecache/
 htmldocs/
 .idea/*
 .idea
+src/*.exe
+src/generated.nim
