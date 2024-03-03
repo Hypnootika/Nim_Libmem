@@ -17,6 +17,9 @@ var
   pthread2: threadt
   moduleList: seq[modulet]
   pmodule: modulet
+  symbol: symbolt
+  symbolList: seq[symbolt]
+
 
 
 proc enumProcessCallback(pproc: ptr processt, arg: pointer): boolt {.cdecl.} =
@@ -35,6 +38,10 @@ proc enumModuleCallback(pmodule: ptr modulet, arg: pointer): boolt {.cdecl.} =
   moduleList.add(pmodule[])
   result = boolt.True
 
+proc enumSymbolCallback(psymbol: ptr symbolt, arg: pointer): boolt {.cdecl.} =
+  symbolList.add(psymbol[])
+  result = boolt.True
+
 proc printProcessInfo(prefix: string, p: processt) =
   echo prefix, "Process ID: ", p.pid,
       "\n", prefix, "Process Name: ", nullTerminated($$p.name),
@@ -51,6 +58,10 @@ proc printModuleInfo(prefix: string, m: modulet) =
 proc printThreadInfo(prefix: string, t: threadt) =
   echo prefix, "Thread ID: ", t.tid,
       "\n", prefix, "Thread Owner Process ID: ", t.ownerpid
+
+proc printSymbolInfo(prefix: string, s: symbolt) =
+  echo prefix, "Symbol Name: ", nullTerminated($$s.name),
+    "\n", prefix, "Symbol Address: ", s.repr
 
 proc testGetProcess() =
   var p: processt
@@ -201,5 +212,79 @@ proc testUnloadModule() =
   let status2 = Unloadmodule(m.addr)
   assert cast[bool](status2), "Unloadmodule failed."
 
-testUnloadModule()
+## Not implemented yet
+# testUnloadModule()
+#
+# proc testUnloadModuleEx() =
+#   const test_module = "C:\\Windows\\System32\\ntdll.dll"
+#   var pl: processt
+#   var ml: modulet
+#   let status = Findprocess(testProcess, pl.addr)
+#   assert cast[bool](status), "Getprocess failed."
+#   let status2 = Loadmoduleex(pl.addr, test_module, ml.addr)
+#   assert cast[bool](status2), "Loadmodule failed."
+#   printModuleInfo("Loadmodule: ", ml)
+#   let status3 = Unloadmoduleex(pl.addr, ml.addr)
+#   assert cast[bool](status3), "Unloadmoduleex failed."
+#
+# testUnloadModuleEx()
 
+## Not implemented yet
+# proc testEnumSymbols() =
+#   var module = moduleList[0]
+#   var status: boolt = Enumsymbols(module.addr, enumSymbolCallback, nil)
+#   assert cast[bool](status), "Enumsymbols failed."
+#   assert symbolList.len > 0, "Enumsymbols failed."
+#   for s in symbolList:
+#     printSymbolInfo("Enumsymbols: ", s)
+#
+# testEnumSymbols()
+
+## Not implemented yet
+# proc testFindSymbolAddress() =
+#   var module = moduleList[0]
+#   var symbol_name = "NtCreateFile"
+#   let status = Findsymboladdress(module.addr, symbol_name)
+#   assert status != 0, "Findsymboladdress failed."
+#   echo "Findsymboladdress: ", status
+#
+# testFindSymbolAddress()
+
+## Not implemented yet
+# proc testDemangleSymbol() =
+#   var symbol_name = "NtCreateFile"
+#   var demangled_buf: cstring
+#   let status = Demanglesymbol(symbol_name, demangled_buf, 1024)
+#   assert status.len > 0, "Demanglesymbol failed."
+#   echo "Demanglesymbol: ", status
+#
+# testDemangleSymbol()
+
+## Not implemented yet
+# proc testFreeDemangleSymbol() =
+#   var symbol_name = "NtCreateFile"
+#   let status = Freedemanglesymbol(symbol_name)
+#   assert status == enumboolt.True, "Freedemanglesymbol failed."
+#
+# testFreeDemangleSymbol()
+
+## Not implemented yet
+# proc testEnumSymbolsDemangled() =
+#   var module = moduleList[0]
+#   var status: boolt = Enumsymbolsdemangled(module.addr, enumSymbolCallback, nil)
+#   assert cast[bool](status), "Enumsymbolsdemangled failed."
+#   assert symbolList.len > 0, "Enumsymbolsdemangled failed."
+#   for s in symbolList:
+#     printSymbolInfo("Enumsymbolsdemangled: ", s)
+#
+# testEnumSymbolsDemangled()
+
+## Not implemented yet
+# proc testFindSymbolAddressDemangled() =
+#   var module = moduleList[0]
+#   var symbol_name = "NtCreateFile"
+#   let status = Findsymboladdressdemangled(module.addr, symbol_name)
+#   assert status != 0, "Findsymboladdressdemangled failed."
+#   echo "Findsymboladdressdemangled: ", status
+#
+# testFindSymbolAddressDemangled()
