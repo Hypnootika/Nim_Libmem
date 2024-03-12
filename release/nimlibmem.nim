@@ -28,10 +28,11 @@ type
 type
   boolt* = enumboolt         
   bytet* = uint8             
-  addresst* = uint64         
+  addresst* = uint64
   sizet* = uint64            
   chart* = cchar            
   stringt* = cstring         
+  bytearrayt* = ptr bytet    
   pidt* = uint32             
   tidt* = uint32             
   timet* = uint64            
@@ -58,13 +59,13 @@ type
     name*: array[4096'i64, chart]
 
   modulet* = structmodulet   
-  structpaget* {.pure, inheritable, bycopy.} = object
+  structsegmentt* {.pure, inheritable, bycopy.} = object
     base*: addresst          
     endfield*: addresst
     size*: sizet
     prot*: prott
 
-  paget* = structpaget       
+  segmentt* = structsegmentt 
   structsymbolt* {.pure, inheritable, bycopy.} = object
     name*: stringt           
     address*: addresst
@@ -125,8 +126,26 @@ proc Loadmoduleex*(process: ptr processt; path: stringt; moduleout: ptr modulet)
 proc Unloadmodule*(module: ptr modulet): boolt {.libmem, importc: "LM_UnloadModule".}
 proc Unloadmoduleex*(process: ptr processt; module: ptr modulet): boolt {.libmem, importc: "LM_UnloadModuleEx".}
 proc Enumsymbols*(module: ptr modulet; callback: proc (a0: ptr symbolt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumSymbols".}
-proc Findsymboladdress*(module: ptr modulet; name: stringt): addresst {.libmem, importc: "LM_FindSymbolAddress".}
-proc Demanglesymbol*(symbolname: stringt; demangledbuf: cstring; maxsize: sizet): stringt {.libmem, importc: "LM_DemangleSymbol".}
-proc Freedemanglesymbol*(symbolname: cstring): void {.libmem, importc: "LM_FreeDemangleSymbol".}
+proc Findsymboladdress*(module: ptr modulet; symbolname: stringt): addresst {.libmem, importc: "LM_FindSymbolAddress".}
+proc Demanglesymbol*(symbolname: stringt; demangledbuf: cstring; maxsize: sizet): cstring {.libmem, importc: "LM_DemangleSymbol".}
+proc Freedemangledsymbol*(symbolname: cstring): void {.libmem, importc: "LM_FreeDemangledSymbol".}
 proc Enumsymbolsdemangled*(module: ptr modulet; callback: proc (a0: ptr symbolt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumSymbolsDemangled".}
-proc Findsymboladdressdemangled*(module: ptr modulet; name: stringt): addresst {.libmem, importc: "LM_FindSymbolAddressDemangled".}
+proc Findsymboladdressdemangled*(module: ptr modulet; symbolname: stringt): addresst {.libmem, importc: "LM_FindSymbolAddressDemangled".}
+proc Enumsegments*(callback: proc (a0: ptr segmentt; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.libmem, importc: "LM_EnumSegments".}
+proc Enumsegmentsex*(process: ptr processt; callback: proc (a0: ptr segmentt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumSegmentsEx".}
+proc Findsegment*(address: addresst; segmentout: ptr segmentt): boolt {.libmem, importc: "LM_FindSegment".}
+proc Findsegmentex*(process: ptr processt; address: addresst;segmentout: ptr segmentt): boolt {.libmem, importc: "LM_FindSegmentEx".}
+proc Readmemory*(source: addresst; dest: ptr bytet; size: sizet): sizet {.libmem, importc: "LM_ReadMemory".}
+proc Readmemoryex*(process: ptr processt; source: addresst; dest: ptr bytet;size: sizet): sizet {.libmem, importc: "LM_ReadMemoryEx".}
+proc Writememory*(dest: addresst; source: bytearrayt; size: sizet): sizet {.libmem, importc: "LM_WriteMemory".}
+proc Writememoryex*(process: ptr processt; dest: addresst; source: bytearrayt;size: sizet): sizet {.libmem, importc: "LM_WriteMemoryEx".}
+proc Setmemory*(dest: addresst; byte: bytet; size: sizet): sizet {.libmem, importc: "LM_SetMemory".}
+proc Setmemoryex*(process: ptr processt; dest: addresst; byte: bytet;size: sizet): sizet {.libmem, importc: "LM_SetMemoryEx".}
+proc Protmemory*(address: addresst; size: sizet; prot: prott;oldprotout: ptr prott): boolt {.libmem, importc: "LM_ProtMemory".}
+proc Protmemoryex*(process: ptr processt; address: addresst; size: sizet;prot: prott; oldprotout: ptr prott): boolt {.libmem, importc: "LM_ProtMemoryEx".}
+proc Allocmemory*(size: sizet; prot: prott): addresst {.libmem, importc: "LM_AllocMemory".}
+proc Allocmemoryex*(process: ptr processt; size: sizet; prot: prott): addresst {.libmem, importc: "LM_AllocMemoryEx".}
+proc Freememory*(alloc: addresst; size: sizet): boolt {.libmem, importc: "LM_FreeMemory".}
+proc Freememoryex*(process: ptr processt; alloc: addresst; size: sizet): boolt {.libmem, importc: "LM_FreeMemoryEx".}
+proc Deeppointer*(base: addresst; offsets: ptr addresst; noffsets: csize_t): addresst {.libmem, importc: "LM_DeepPointer".}
+proc Deeppointerex*(process: ptr processt; base: addresst;offsets: ptr addresst; noffsets: sizet): addresst {.libmem, importc: "LM_DeepPointerEx".}
