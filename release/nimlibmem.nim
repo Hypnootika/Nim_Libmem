@@ -2,8 +2,9 @@ import memlib
 const libpath = "..\\release\\libmem.dll"
 const dll = staticReadDll(libpath)
 let lib = checkedLoadLib(dll)
+import nimpy
 buildPragma {cdecl, memlib: lib}: libmem
-
+pyExportModule("convenience_layer")
 const
   Protnone* = cint(0)
 const
@@ -28,7 +29,7 @@ type
 type
   boolt* = enumboolt         
   bytet* = uint8             
-  addresst* = uint64
+  addresst* = uint64         
   sizet* = uint64            
   chart* = cchar            
   stringt* = cstring         
@@ -37,13 +38,13 @@ type
   tidt* = uint32             
   timet* = uint64            
   prott* = uint32            
-  structprocesst* {.pure, inheritable, bycopy.} = object
+  structprocesst*  = object
     pid*: pidt               
     ppid*: pidt
     bits*: sizet
     starttime*: timet
-    path*: array[4096'i64, chart]
-    name*: array[4096'i64, chart]
+    path*: array[4096'i64, char]
+    name*: array[4096'i64, char]
 
   processt* = structprocesst 
   structthreadt* {.pure, inheritable, bycopy.} = object
@@ -110,8 +111,8 @@ proc Enumprocesses*(callback: proc (a0: ptr processt; a1: pointer): boolt {.cdec
 proc Getprocess*(processout: ptr processt): boolt {.libmem, importc: "LM_GetProcess".}
 proc Getprocessex*(pid: pidt; processout: ptr processt): boolt {.libmem, importc: "LM_GetProcessEx".}
 proc Findprocess*(processname: stringt; processout: ptr processt): boolt {.libmem, importc: "LM_FindProcess".}
-proc Isprocessalive*(process: ptr processt): boolt {.libmem, importc: "LM_IsProcessAlive".}
-proc Getsystembits*(): sizet {.libmem, importc: "LM_GetSystemBits".}
+proc Isprocessalive*(pproc: ptr processt): boolt {.libmem, importc: "LM_IsProcessAlive".}
+proc Getsystembits*(): sizet {.exportpy, libmem, importc: "LM_GetSystemBits".}
 proc Enumthreads*(callback: proc (a0: ptr threadt; a1: pointer): boolt {.cdecl.};arg: pointer): boolt {.libmem, importc: "LM_EnumThreads".}
 proc Enumthreadsex*(process: ptr processt; callback: proc (a0: ptr threadt;a1: pointer): boolt {.cdecl.}; arg: pointer): boolt {.libmem, importc: "LM_EnumThreadsEx".}
 proc Getthread*(threadout: ptr threadt): boolt {.libmem, importc: "LM_GetThread".}
@@ -149,3 +150,8 @@ proc Freememory*(alloc: addresst; size: sizet): boolt {.libmem, importc: "LM_Fre
 proc Freememoryex*(process: ptr processt; alloc: addresst; size: sizet): boolt {.libmem, importc: "LM_FreeMemoryEx".}
 proc Deeppointer*(base: addresst; offsets: ptr addresst; noffsets: csize_t): addresst {.libmem, importc: "LM_DeepPointer".}
 proc Deeppointerex*(process: ptr processt; base: addresst;offsets: ptr addresst; noffsets: sizet): addresst {.libmem, importc: "LM_DeepPointerEx".}
+
+proc test*() : structprocesst{.exportpy.} =
+  var pprocc: structprocesst
+  discard Getprocess(pprocc.addr)
+  result = pprocc
